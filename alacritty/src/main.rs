@@ -3,7 +3,6 @@
 #![warn(rust_2018_idioms, future_incompatible)]
 #![deny(clippy::all, clippy::if_not_else, clippy::enum_glob_use, clippy::wrong_pub_self_convention)]
 #![cfg_attr(feature = "cargo-clippy", deny(warnings))]
-#![cfg_attr(all(test, feature = "bench"), feature(test))]
 // With the default subsystem, 'console', windows creates an additional console
 // window for the program.
 // This is silently ignored on non-windows systems.
@@ -26,6 +25,7 @@ use log::{error, info};
 use winapi::um::wincon::{AttachConsole, FreeConsole, ATTACH_PARENT_PROCESS};
 
 use alacritty_terminal::event_loop::{self, EventLoop, Msg};
+use alacritty_terminal::grid::Dimensions;
 use alacritty_terminal::sync::FairMutex;
 use alacritty_terminal::term::Term;
 use alacritty_terminal::tty;
@@ -33,7 +33,6 @@ use alacritty_terminal::tty;
 mod cli;
 mod clipboard;
 mod config;
-mod cursor;
 mod daemon;
 mod display;
 mod event;
@@ -42,16 +41,10 @@ mod logging;
 #[cfg(target_os = "macos")]
 mod macos;
 mod message_bar;
-mod meter;
 #[cfg(windows)]
 mod panic;
 mod renderer;
 mod scheduler;
-mod url;
-mod window;
-
-#[cfg(all(feature = "wayland", not(any(target_os = "macos", windows))))]
-mod wayland_theme;
 
 mod gl {
     #![allow(clippy::all)]
@@ -130,10 +123,8 @@ fn run(
 ) -> Result<(), Box<dyn Error>> {
     info!("Welcome to Alacritty");
 
-    info!("Configuration files loaded from:");
-    for path in &config.ui_config.config_paths {
-        info!("  \"{}\"", path.display());
-    }
+    // Log the configuration paths.
+    log_config_path(&config);
 
     // Set environment variables.
     tty::setup_env(&config);
@@ -148,7 +139,7 @@ fn run(
     info!(
         "PTY dimensions: {:?} x {:?}",
         display.size_info.screen_lines(),
-        display.size_info.cols()
+        display.size_info.columns()
     );
 
     // Create the terminal.
@@ -188,7 +179,7 @@ fn run(
     //
     // The monitor watches the config file for changes and reloads it. Pending
     // config changes are processed in the main loop.
-    if config.ui_config.live_config_reload() {
+    if config.ui_config.live_config_reload {
         monitor::watch(config.ui_config.config_paths.clone(), event_proxy);
     }
 
@@ -241,4 +232,13 @@ fn run(
     info!("Goodbye");
 
     Ok(())
+}
+
+fn log_config_path(config: &Config) {
+    let mut msg = String::from("Configuration files loaded from:");
+    for path in &config.ui_config.config_paths {
+        msg.push_str(&format!("\n  {:?}", path.display()));
+    }
+
+    info!("{}", msg);
 }

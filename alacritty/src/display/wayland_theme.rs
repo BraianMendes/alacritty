@@ -1,14 +1,15 @@
 use glutin::platform::unix::{ARGBColor, Button, ButtonState, Element, Theme as WaylandTheme};
 
-use alacritty_terminal::config::Colors;
 use alacritty_terminal::term::color::Rgb;
+
+use crate::config::color::Colors;
 
 const INACTIVE_OPACITY: u8 = 127;
 
 #[derive(Debug, Clone)]
 pub struct AlacrittyWaylandTheme {
-    pub background: ARGBColor,
     pub foreground: ARGBColor,
+    pub background: ARGBColor,
     pub dim_foreground: ARGBColor,
     pub hovered_close_icon: ARGBColor,
     pub hovered_maximize_icon: ARGBColor,
@@ -17,9 +18,9 @@ pub struct AlacrittyWaylandTheme {
 
 impl AlacrittyWaylandTheme {
     pub fn new(colors: &Colors) -> Self {
-        let hovered_close_icon = colors.normal().red.into_rgba();
-        let hovered_maximize_icon = colors.normal().green.into_rgba();
-        let hovered_minimize_icon = colors.normal().yellow.into_rgba();
+        let hovered_close_icon = colors.normal.red.into_rgba();
+        let hovered_maximize_icon = colors.normal.green.into_rgba();
+        let hovered_minimize_icon = colors.normal.yellow.into_rgba();
         let foreground = colors.search_bar_foreground().into_rgba();
         let background = colors.search_bar_background().into_rgba();
 
@@ -31,8 +32,8 @@ impl AlacrittyWaylandTheme {
             background,
             dim_foreground,
             hovered_close_icon,
-            hovered_minimize_icon,
             hovered_maximize_icon,
+            hovered_minimize_icon,
         }
     }
 }
@@ -67,17 +68,13 @@ impl WaylandTheme for AlacrittyWaylandTheme {
             (_, Button::Close) => self.hovered_close_icon,
         }
     }
-
-    fn font(&self) -> Option<(String, f32)> {
-        Some((String::from("sans-serif"), 17.))
-    }
 }
 
-trait IntoARGBColor {
+trait IntoArgbColor {
     fn into_rgba(self) -> ARGBColor;
 }
 
-impl IntoARGBColor for Rgb {
+impl IntoArgbColor for Rgb {
     fn into_rgba(self) -> ARGBColor {
         ARGBColor { a: 0xff, r: self.r, g: self.g, b: self.b }
     }

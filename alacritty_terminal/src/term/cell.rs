@@ -178,7 +178,7 @@ mod tests {
 
     #[test]
     fn line_length_works() {
-        let mut row = Row::<Cell>::new(Column(10));
+        let mut row = Row::<Cell>::new(10);
         row[Column(5)].c = 'a';
 
         assert_eq!(row.line_length(), Column(6));
@@ -186,29 +186,9 @@ mod tests {
 
     #[test]
     fn line_length_works_with_wrapline() {
-        let mut row = Row::<Cell>::new(Column(10));
+        let mut row = Row::<Cell>::new(10);
         row[Column(9)].flags.insert(super::Flags::WRAPLINE);
 
         assert_eq!(row.line_length(), Column(10));
-    }
-}
-
-#[cfg(all(test, feature = "bench"))]
-mod benches {
-    extern crate test;
-
-    use super::*;
-
-    #[bench]
-    fn cell_reset(b: &mut test::Bencher) {
-        b.iter(|| {
-            let mut cell = Cell::default();
-
-            for _ in 0..100 {
-                cell = test::black_box(Color::Named(NamedColor::Foreground).into());
-            }
-
-            test::black_box(cell);
-        });
     }
 }
